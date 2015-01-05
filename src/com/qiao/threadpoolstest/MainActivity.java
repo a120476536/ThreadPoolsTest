@@ -29,6 +29,9 @@ import android.widget.ListView;
 
 import com.qiao.utils.ThreadPool;
 import com.qiao.utils.ThreadPools;
+
+
+
 /**
  * 线程池管理 特殊标记：仅仅是为了测试线程，数据什么的我就扔一边了
  * @author 有点凉了
@@ -73,7 +76,50 @@ public class MainActivity extends Activity{
 //		if (bitMapsAll.size()>0) {
 			myAdapter = new MyAdapter(this, bitMapsAll);
 //		}
-		ThreadPools.startThread(new MyThread());
+		ThreadPools.startThread(new ThreadPool() {
+			
+			@Override
+			public void start() {
+				for (int i = 0; i < Images.imageThumbUrls.length; i++) {
+					 BufferedInputStream bis = null;  
+			         ByteArrayOutputStream baos = new ByteArrayOutputStream();  
+			         try {
+						URL url = new URL(Images.imageThumbUrls[i]);
+						HttpURLConnection connection = (HttpURLConnection) url.openConnection();  
+						 connection.setDoInput(true);  
+			                connection.setRequestMethod("GET");  
+			                connection.connect();  
+			                InputStream is = connection.getInputStream();  
+			                int code = connection.getResponseCode();  
+			                if (code == 200) {  
+			                    bis = new BufferedInputStream(is);  
+			                    int c = 0;  
+			                    byte[] buf = new byte[1024 * 8];  
+			                    while ((c = bis.read(buf)) != -1) {  
+			                    	Log.i(TAG, "==-->m c:="+c);
+			                        baos.write(buf, 0, c);  
+			                        baos.flush();  
+			                    }  
+//			                    return baos.toByteArray();  
+			                    Bitmap bitmap = BitmapFactory.decodeByteArray(baos.toByteArray(), 0, baos.toByteArray().length);
+//			                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, null);
+			                    Log.i(TAG, "==-->m bitmap:="+bitmap);
+			                    bitMaps.add(bitmap);
+			                    Message msg = Message.obtain();
+			                    msg.what=0;
+			                    msg.obj=bitMaps;
+			                    handler.sendMessage(msg);
+			                }  
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}  
+				}	
+			}
+		});
 		listView_main_show.setAdapter(myAdapter);
 		
 	}
@@ -86,44 +132,7 @@ public class MainActivity extends Activity{
 
 		@Override
 		public void start() {
-			for (int i = 0; i < Images.imageThumbUrls.length; i++) {
-				 BufferedInputStream bis = null;  
-		         ByteArrayOutputStream baos = new ByteArrayOutputStream();  
-		         try {
-					URL url = new URL(Images.imageThumbUrls[i]);
-					HttpURLConnection connection = (HttpURLConnection) url.openConnection();  
-					 connection.setDoInput(true);  
-		                connection.setRequestMethod("GET");  
-		                connection.connect();  
-		                InputStream is = connection.getInputStream();  
-		                int code = connection.getResponseCode();  
-		                if (code == 200) {  
-		                    bis = new BufferedInputStream(is);  
-		                    int c = 0;  
-		                    byte[] buf = new byte[1024 * 8];  
-		                    while ((c = bis.read(buf)) != -1) {  
-		                    	Log.i(TAG, "==-->m c:="+c);
-		                        baos.write(buf, 0, c);  
-		                        baos.flush();  
-		                    }  
-//		                    return baos.toByteArray();  
-		                    Bitmap bitmap = BitmapFactory.decodeByteArray(baos.toByteArray(), 0, baos.toByteArray().length);
-//		                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, null);
-		                    Log.i(TAG, "==-->m bitmap:="+bitmap);
-		                    bitMaps.add(bitmap);
-		                    Message msg = Message.obtain();
-		                    msg.what=0;
-		                    msg.obj=bitMaps;
-		                    handler.sendMessage(msg);
-		                }  
-				} catch (MalformedURLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}  
-			}
+			
 		}
 		
 	}
